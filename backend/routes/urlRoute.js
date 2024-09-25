@@ -3,7 +3,7 @@ const urlSchema = require("../models/url");
 const shortid = require("shortid");
 const router = express.Router();
 const validator = require("validator");
-
+const cors= require('cors')
 //get all
 
 
@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
     res.send(data);
 })
 //redirect
-router.get('/:shortId', async (req, res) => {
+router.get('/:shortId',express().options("*",cors()), async (req, res) => {
     const shortId = req.params.shortId;
     if (shortId === '') {
         throw new Error('id must be a non-empty string');

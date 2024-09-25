@@ -1,38 +1,40 @@
 const express = require('express');
 const app = express();
-const dotenv = require('dotenv');
-const mongoose = require("mongoose");
+const connectDB = require('./db/connect');
+const cors = require('cors');
+const port = process.env.PORT || 3000;
 const urlRoute = require("./routes/urlRoute");
-
-dotenv.config(); // Load environment variables
-const uri = process.env.Mongo_URL;
-
-app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use("/url", urlRoute);
+app.options('*', cors());
+const origin1 = process.env.ORIGIN1?.replace(/\/+$/, ''); // Remove trailing slash
+const origin2 = process.env.ORIGIN2?.replace(/\/+$/, '');
+const origin3 = process.env.ORIGIN3?.replace(/\/+$/, '');
 
+const allowedOrigins = [origin1, origin2, origin3].filter(Boolean); // Filter out any undefined values
 
+// CORS configuration
+app.use(cors({
+    origin: (origin, callback) => {
+        console.log("Request origin: ", origin);
+        if (allowedOrigins.indexOf(origin?.replace(/\/+$/, '')) !== -1 || !origin) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// Routes
+
+// Default route
 app.get('/', (req, res) => {
-    res.send("hello world");
-    console.log("start");
+    res.send('API is running...');
 });
-
-connect = async () => {
-    const connectionParams = {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-    };
-    try {
-        await mongoose.connect(uri, connectionParams);
-        console.log("connected to database successfully");
-    } catch (error) {
-        console.log("could not connect to database.", error);
-    }
-};
-
-connect();
-
-const port = process.env.PORT || 8000;
+app.use("/url", urlRoute);
+// Start server
 app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+    console.log(`Server started on port http://localhost:${port}`);
+    connectDB(); // Database connection after the server starts
 });
